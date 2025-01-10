@@ -8,6 +8,7 @@ const Quiz = () => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [score, setScore] = useState(0);
     const [timer, setTimer] = useState(60); // Timer in seconds
+    const [isTimerPaused, setIsTimerPaused] = useState(false);
     const [showModal, setShowModal] = useState(false); // For custom alert modal
     const [modalMessage, setModalMessage] = useState(""); // Custom message for modal
     const [showExitModal, setShowExitModal] = useState(false); // For exit modal confirmation
@@ -60,7 +61,7 @@ const Quiz = () => {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [isTimerPaused]);
 
     useEffect(() => {
         if (questions.length > 0 && timer > 0) {
@@ -121,6 +122,7 @@ const Quiz = () => {
 
     const closeModal = () => {
         setShowModal(false);
+        setIsTimerPaused(false); // Resume the timer when modal closes
         localStorage.removeItem(`${username}_currentQuiz`);
         navigate('/dashboard');
     };
@@ -132,6 +134,7 @@ const Quiz = () => {
 
     const closeExitModal = (continueQuiz) => {
         setShowExitModal(false);
+        setIsTimerPaused(false); // Resume the timer when exit modal is closed
         if (!continueQuiz) {
             navigate('/dashboard');
         }
