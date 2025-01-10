@@ -47,6 +47,8 @@ const Quiz = () => {
     }, [navigate, username]);
 
     useEffect(() => {
+        if (isTimerPaused) return;  // If the timer is paused, do nothing
+    
         const interval = setInterval(() => {
             setTimer(prev => {
                 if (prev > 0) {
@@ -59,9 +61,9 @@ const Quiz = () => {
                 }
             });
         }, 1000);
-
-        return () => clearInterval(interval);
-    }, [isTimerPaused]);
+    
+        return () => clearInterval(interval); // Clean up the interval on component unmount or when isTimerPaused changes
+    }, [isTimerPaused, timer]);  // Re-run the effect when isTimerPaused or timer changes    
 
     useEffect(() => {
         if (questions.length > 0 && timer > 0) {
@@ -77,25 +79,25 @@ const Quiz = () => {
 
     const handleAnswer = (isCorrect) => {
         const savedQuiz = JSON.parse(localStorage.getItem(`${username}_currentQuiz`));
-
+    
         if (isCorrect) {
             savedQuiz.score += 1;  // Update score from saved quiz
         }
-
+    
         if (savedQuiz.currentQuestionIndex < questions.length - 1) {
             savedQuiz.currentQuestionIndex += 1;  // Move to next question
         } else {
             // Handle quiz completion when all questions are answered
-            handleQuizEnd(false, savedQuiz); // false indicates user finished all questions
+            handleQuizEnd(false); // False indicates user finished all questions
             return;
         }
-
+    
         // Save updated quiz state to localStorage
         localStorage.setItem(`${username}_currentQuiz`, JSON.stringify(savedQuiz));
         setCurrentQuestionIndex(savedQuiz.currentQuestionIndex);
         setScore(savedQuiz.score);  // Update score in state as well
-    };
-
+    };    
+    
     const handleQuizEnd = (isTimeUp) => {
         const savedQuiz = JSON.parse(localStorage.getItem(`${username}_currentQuiz`));
     
@@ -104,21 +106,25 @@ const Quiz = () => {
             navigate('/dashboard');
             return;
         }
-
-        // Save the score to quiz history
+    
+        // Save the score to quiz history **only once**
         const history = JSON.parse(localStorage.getItem(`${username}_quizHistory`)) || [];
-        history.push({ score: savedQuiz.score, total: savedQuiz.questions.length });
-        localStorage.setItem(`${username}_quizHistory`, JSON.stringify(history));
-
+        if (!history.some(entry => entry.score === savedQuiz.score && entry.total === savedQuiz.questions.length)) {
+            history.push({ score: savedQuiz.score, total: savedQuiz.questions.length });
+            localStorage.setItem(`${username}_quizHistory`, JSON.stringify(history));
+        }
+    
+        // Show modal with results
         setTimeout(() => {
-            if (isTimeUp) {   
+            if (isTimeUp) {
                 setModalMessage(`Time's up! You scored ${savedQuiz.score}/${savedQuiz.questions.length}.`);
             } else {
                 setModalMessage(`Quiz completed! You scored ${savedQuiz.score}/${savedQuiz.questions.length}.`);
             }
+            setIsTimerPaused(true);
             setShowModal(true);
         }, 0);
-    };
+    };      
 
     const closeModal = () => {
         setShowModal(false);
@@ -129,6 +135,7 @@ const Quiz = () => {
 
     // Handle "Back" button click
     const handleBackButtonClick = () => {
+        setIsTimerPaused(true); // pause the timer when modal closes
         setShowExitModal(true); // Show exit confirmation modal
     };
 
