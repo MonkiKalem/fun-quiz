@@ -6,6 +6,9 @@ const Register = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
+    const [showModal, setShowModal] = useState(false);  // For showing modal
+    const [modalMessage, setModalMessage] = useState('');  // Modal message
+    const [modalImage, setModalImage] = useState('');  // Image to show in modal
     const navigate = useNavigate();
 
     const validateForm = () => {
@@ -47,7 +50,9 @@ const Register = () => {
         // Cek apakah username sudah ada
         const existingUser = userData.find(user => user.username === username);
         if (existingUser) {
-            alert('Username already exists! Please choose a different username.');
+            setModalMessage('Username already exists! Please choose a different username.');
+            setModalImage('images/wrong.svg'); 
+            setShowModal(true); // Show modal for username error
             return;
         }
 
@@ -57,56 +62,83 @@ const Register = () => {
         // Menyimpan array userData yang sudah diperbarui ke localStorage
         localStorage.setItem('userData', JSON.stringify(userData));
 
-        alert('Registration successful! Redirecting to login page.');
-        navigate('/login');
+        setModalMessage('Registration successful! Redirecting to login page.');
+        setModalImage('images/right.svg'); 
+        setShowModal(true); // Show modal for success
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
+        if (modalMessage === 'Registration successful! Redirecting to login page.') {
+            navigate('/login');  // Navigate to login page after successful registration
+        }
     };
 
     return (
         <div className="register-container">
             <div className="register-card">
-                <h2 className="register-title">Register</h2>
-                <form className="register-form">
-                    <div className="input-group">
-                        <label htmlFor="username">Username</label>
-                        <input
-                            type="text"
-                            id="username"
-                            placeholder="Enter your username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                        />
+                <div className="left-side">
+                    <div className="app-name">
+                        <h1>Fun Quiz</h1>
                     </div>
-                    <div className="input-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                    </div>
-                    <div className="input-group">
-                        <label htmlFor="confirmPassword">Confirm Password</label>
-                        <input
-                            type="password"
-                            id="confirmPassword"
-                            placeholder="Confirm your password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                        />
-                    </div>
+                    <img src="images/question.svg" alt="Fun Quiz" className="quiz-image" />
+                </div>
+                <div className="right-side">
+                    <h2 className="register-title">Register</h2>
+                    <form className="register-form">
+                        <div className="input-group">
+                            <label htmlFor="username">Username</label>
+                            <input
+                                type="text"
+                                id="username"
+                                placeholder="Enter your username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label htmlFor="password">Password</label>
+                            <input
+                                type="password"
+                                id="password"
+                                placeholder="Enter your password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label htmlFor="confirmPassword">Confirm Password</label>
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                placeholder="Confirm your password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                            />
+                        </div>
 
-                    {error && <div className="error-message">{error}</div>}
+                        {error && <div className="error-message">{error}</div>}
 
-                    <button type="button" className="register-btn" onClick={handleRegister}>
-                        Register
-                    </button>
-                </form>
-                <div className="login-link">
-                    <p>Already have an account? <a href="/login">Login here</a></p>
+                        <button type="button" className="register-btn" onClick={handleRegister}>
+                            Register
+                        </button>
+                    </form>
+                    <div className="login-link">
+                        <p>Already have an account? <a href="/login">Login here</a></p>
+                    </div>
                 </div>
             </div>
+
+            {/* Modal for registration success or error */}
+            {showModal && (
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <img src={modalImage} className="status-icon" alt="status-icon"/> 
+                        <p>{modalMessage}</p>
+                        <button className="btn btn-primary" onClick={closeModal}>Close</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
